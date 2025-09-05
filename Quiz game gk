@@ -1,0 +1,168 @@
+import os, zipfile
+
+# Project folder
+folder = "gk_quiz_game"
+os.makedirs(folder, exist_ok=True)
+
+# index.html
+index_html = """<!DOCTYPE html>
+<html lang="hi">
+<head>
+  <meta charset="UTF-8">
+  <title>बच्चों का GK Quiz Game</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <h1>बच्चों का GK Quiz Game 🎉</h1>
+  <div class="quiz-box">
+    <p id="question"></p>
+    <div id="options"></div>
+    <p id="timer"></p>
+    <p id="result"></p>
+  </div>
+
+  <!-- Sounds -->
+  <audio id="correctSound" src="sounds/correct.ogg"></audio>
+  <audio id="wrongSound" src="sounds/wrong.ogg"></audio>
+
+  <script src="script.js"></script>
+</body>
+</html>"""
+with open(f"{folder}/index.html", "w", encoding="utf-8") as f:
+    f.write(index_html)
+
+# style.css
+style_css = """body {
+  font-family: Arial, sans-serif;
+  background: #f0f8ff;
+  text-align: center;
+  padding: 30px;
+}
+.quiz-box {
+  background: #fffacd;
+  border: 2px solid #f7d774;
+  border-radius: 15px;
+  padding: 20px;
+  max-width: 500px;
+  margin: auto;
+}
+button {
+  display: block;
+  margin: 10px auto;
+  padding: 12px;
+  width: 80%;
+  border: none;
+  border-radius: 10px;
+  background: #87cefa;
+  cursor: pointer;
+  font-size: 16px;
+}
+button:hover { background: #4682b4; color: white; }
+.correct { background: #28a745 !important; color: white; }
+.wrong { background: #dc3545 !important; color: white; }
+#result { font-weight: bold; margin-top: 15px; font-size: 18px; }
+#timer { font-size: 20px; font-weight: bold; color: #d9534f; }"""
+with open(f"{folder}/style.css", "w", encoding="utf-8") as f:
+    f.write(style_css)
+
+# script.js
+script_js = """const quiz = [
+  { question: "भारत की राजधानी कौन सी है?", options: ["मुंबई","दिल्ली","कोलकाता","चेन्नई"], answer: "दिल्ली" },
+  { question: "सौर मंडल का सबसे बड़ा ग्रह कौन सा है?", options: ["पृथ्वी","मंगल","बृहस्पति","शुक्र"], answer: "बृहस्पति" },
+  { question: "इंद्रधनुष में कितने रंग होते हैं?", options: ["5","6","7","8"], answer: "7" },
+  { question: "पृथ्वी पर सबसे बड़ा जानवर कौन है?", options: ["हाथी","नीली व्हेल","जिराफ़","शार्क"], answer: "नीली व्हेल" },
+  { question: "भारत के राष्ट्रपिता कौन कहलाते हैं?", options: ["भगत सिंह","महात्मा गांधी","नेहरूजी","सुभाष चंद्र बोस"], answer: "महात्मा गांधी" }
+];
+
+let current = 0, score = 0, timeLeft = 10, timer;
+
+function loadQuestion() {
+  clearInterval(timer);
+  timeLeft = 10;
+  document.getElementById("result").innerHTML = "";
+  document.getElementById("timer").textContent = "⏰ समय: " + timeLeft + " सेकंड";
+  const q = quiz[current];
+  document.getElementById("question").textContent = q.question;
+  const optionsDiv = document.getElementById("options");
+  optionsDiv.innerHTML = "";
+  q.options.forEach(option => {
+    const btn = document.createElement("button");
+    btn.textContent = option;
+    btn.onclick = () => checkAnswer(btn, option);
+    optionsDiv.appendChild(btn);
+  });
+  timer = setInterval(() => {
+    timeLeft--;
+    document.getElementById("timer").textContent = "⏰ समय: " + timeLeft + " सेकंड";
+    if (timeLeft <= 0) {
+      clearInterval(timer);
+      document.getElementById("result").textContent = "⏳ समय समाप्त!";
+      document.getElementById("wrongSound").play();
+      highlightCorrect();
+      disableButtons();
+      setTimeout(nextQuestion, 2000);
+    }
+  }, 1000);
+}
+
+function checkAnswer(button, answer) {
+  clearInterval(timer);
+  if (answer === quiz[current].answer) {
+    document.getElementById("result").textContent = "✅ सही जवाब!";
+    document.getElementById("correctSound").play();
+    button.classList.add("correct");
+    score++;
+  } else {
+    document.getElementById("result").textContent = "❌ गलत जवाब!";
+    document.getElementById("wrongSound").play();
+    button.classList.add("wrong");
+    highlightCorrect();
+  }
+  disableButtons();
+  setTimeout(nextQuestion, 2000);
+}
+
+function highlightCorrect() {
+  document.querySelectorAll("#options button").forEach(btn => {
+    if (btn.textContent === quiz[current].answer) btn.classList.add("correct");
+  });
+}
+function disableButtons() {
+  document.querySelectorAll("#options button").forEach(btn => btn.disabled = true);
+}
+function nextQuestion() {
+  current++;
+  if (current < quiz.length) loadQuestion();
+  else endGame();
+}
+function endGame() {
+  document.getElementById("question").textContent = "🎊 क्विज़ समाप्त!";
+  document.getElementById("options").innerHTML = "";
+  document.getElementById("timer").textContent = "";
+  document.getElementById("result").textContent = "आपका स्कोर: " + score + "/" + quiz.length;
+} 
+loadQuestion();"""
+with open(f"{folder}/script.js", "w", encoding="utf-8") as f:
+    f.write(script_js)
+
+# sounds folder
+os.makedirs(f"{folder}/sounds", exist_ok=True)
+
+# (Dummy empty sounds, आप बाद में असली .ogg डाल सकते हो)
+open(f"{folder}/sounds/correct.ogg", "wb").close()
+open(f"{folder}/sounds/wrong.ogg", "wb").close()
+
+# ZIP file बनाओ
+zip_name = "gk_quiz_game.zip"
+with zipfile.ZipFile(zip_name, "w") as z:
+    for root, dirs, files in os.walk(folder):
+        for file in files:
+            filepath = os.path.join(root, file)
+            z.write(filepath, os.path.relpath(filepath, folder))
+
+print(f"✅ ZIP file ready: {zip_name}")
+
+
+
+
+
